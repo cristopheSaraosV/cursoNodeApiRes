@@ -2,16 +2,21 @@ const { response, request } = require('express');
 const Usuario    = require('../models/usuario');
 const bcryptjs   = require('bcryptjs');
 
-const usuariosGet = async (req = request, res = response) => {
-    const { limite = 5, desde = 0 } = req.query;
-    const usuarios = await Usuario.find()
-        .skip( Number(desde) )
-        .limit( Number(limite) );
+const usuariosGet = async ( req = request, res = response ) => {
 
-    res.json(usuarios);
+    const { limite = 5, desde = 0 } = req.query;
+
+    const [total,usuarios] = await Promise.all([
+        Usuario.countDocuments({estado: true }),
+        Usuario.find({estado : true })
+			.skip( Number(desde) )
+			.limit( Number(limite) )
+    ]);
+	
+    res.json({total, usuarios });
 }
 
-const usuariosPost = async (req, res = response) => {
+const usuariosPost = async ( req, res = response ) => {
 
     const { nombre, correo, password, rol } = req.body;
     const usuario = new Usuario( {nombre, correo, password, rol } );
@@ -47,9 +52,18 @@ const usuariosPatch = (req, res = response) => {
     });
 }
 
-const usuariosDelete = (req, res = response) => {
+const usuariosDelete = async (req, res = response) => {
+
+    const { id } = req.params;
+
+    // fisicamente
+    // const usuarios = await Usuario.findOneAndDelete(id)
+
+    //  Actualiozar estado
+    const usuarios = await Usuario.findOneAndUpdate(id,{estado:false})
+
     res.json({
-        msg: 'delete API - usuariosDelete'
+        usuarios
     });
 }
 

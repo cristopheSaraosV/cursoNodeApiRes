@@ -1,42 +1,46 @@
 
 const { Router } = require('express');
 const { check } = require('express-validator');
-const { validateData }  = require('../middlewares/validate')
-const { esRoleValido, emailExiste,userExistForId }  = require('../helpers/db-validator')
+
+const { validateData, validarJWT, tieneRol } = require('../middlewares/index')
+
+const { esRoleValido, emailExiste, userExistForId } = require('../helpers/db-validator')
 
 const { usuariosGet, usuariosPut, usuariosPost, usuariosDelete, usuariosPatch } = require('../controllers/usuarios');
 
-const router = Router();
+const userRouter = Router();
 
 
-router.get('/', usuariosGet );
+userRouter.get('/', usuariosGet);
 
-router.put('/:id',[
+userRouter.put('/:id', [
     check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(userExistForId),
     validateData
-], usuariosPut );
+], usuariosPut);
 
-router.post('/', [
-    check('nombre','El correo no es válido').not().isEmpty(),
-    check('password','El password debe ser mayor a 6 digitos o caracteres').isLength({ min: 6 }),
-    check('correo','El correo no es válido').isEmail(),
-    check('correo').custom( emailExiste ),
-    check('rol').custom( esRoleValido ),
+userRouter.post('/', [
+    check('nombre', 'El correo no es válido').not().isEmpty(),
+    check('password', 'El password debe ser mayor a 6 digitos o caracteres').isLength({ min: 6 }),
+    check('correo', 'El correo no es válido').isEmail(),
+    check('correo').custom(emailExiste),
+    check('rol').custom(esRoleValido),
     validateData
-],usuariosPost );
+], usuariosPost);
 
-router.delete('/:id', [
+userRouter.delete('/:id', [
+    validarJWT,
+    tieneRol("ADMIN_ROLE"),
     check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(userExistForId),
     validateData
 ],
-usuariosDelete );
+    usuariosDelete);
 
-router.patch('/', usuariosPatch );
-
-
+userRouter.patch('/', usuariosPatch);
 
 
 
-module.exports = router;
+
+
+module.exports = userRouter;

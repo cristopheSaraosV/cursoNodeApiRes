@@ -55,15 +55,24 @@ const usuariosPatch = (req, res = response) => {
 const usuariosDelete = async (req, res = response) => {
 
     const { id } = req.params;
-
-    // fisicamente
-    // const usuarios = await Usuario.findOneAndDelete(id)
-
-    //  Actualiozar estado
+    const usuarioAutenticado = req.usuarioAutenticado;
     const usuarios = await Usuario.findOneAndUpdate(id,{estado:false})
+   
+    if( !usuarios){
+        return res.status(401).json({
+            msg:"Token no valido, usuario no existe en bd"
+        })
+    }
+
+    if( !usuarios.estado){
+        return res.status(401).json({
+            msg:"Token no valido"
+        })
+    }
 
     res.json({
-        usuarios
+        usuarios,
+        usuarioAutenticado        
     });
 }
 
